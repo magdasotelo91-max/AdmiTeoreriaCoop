@@ -261,8 +261,12 @@ main{max-width:800px;margin:0 auto;padding:16px 12px 40px}
         &nbsp;&nbsp;&nbsp;· Ejecutar como: <em>Yo</em><br>
         &nbsp;&nbsp;&nbsp;· Quién accede: <em>Cualquier usuario</em><br>
         5. Copiá la URL y pegala arriba<br>
-        6. Para ver la lista: Archivo → Compartir → <strong>Publicar en la web → CSV</strong><br>
-        7. Copiá el ID de la URL del Sheet y pegalo arriba
+        6. Para ver los datos en el admin: Archivo → Compartir → <strong>Publicar en la web</strong><br>
+        &nbsp;&nbsp;&nbsp;· Publicá <strong>cada hoja por separado</strong>: "Escuelas" y "Registro"<br>
+        &nbsp;&nbsp;&nbsp;· Formato: <strong>CSV</strong> en ambas<br>
+        7. Copiá el ID de la URL del Sheet y pegalo arriba<br>
+        <br>
+        ⚠️ <strong>Importante:</strong> si la hoja "Registro" no aparece, verificá que esté publicada como CSV en "Publicar en la web".
       </div>
     </div>
   </div>
@@ -348,7 +352,10 @@ function guardarConfig(){
 function parsearCSV(text){
   const lines = text.trim().split('\n');
   if(lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim().toLowerCase());
+  // Normalizar encabezados: minúsculas, sin tildes, sin espacios extra
+  const normalizar = s => s.replace(/^"|"$/g,'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // quita tildes
+  const headers = lines[0].split(',').map(normalizar);
   return lines.slice(1).map(line=>{
     const cols=[]; let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
@@ -421,7 +428,7 @@ async function cargarDashboard(){
       : '<div class="empty-state"><div class="es-icon">📊</div><div class="es-title">Sin datos todavía</div></div>';
 
   } catch(e) {
-    document.getElementById('dash-actividad').innerHTML = `<div class="empty-state"><div class="es-icon">⚙️</div><div class="es-title">Configurá el Google Sheet</div><div class="es-sub">Ir a la pestaña <strong>Configurar</strong> para conectar tu planilla.</div></div>`;
+    document.getElementById('dash-actividad').innerHTML = `<div class="empty-state"><div class="es-icon">⚙️</div><div class="es-title">Configurá el Google Sheet</div><div class="es-sub">Ir a la pestaña <strong>Configurar</strong> para conectar tu planilla.<br><small style="color:#aaa">${e.message}</small></div></div>`;
     document.getElementById('dash-top5').innerHTML = '';
   }
 }
@@ -490,24 +497,29 @@ async function cargarRegistro(){
   container.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>';
   try {
     registroData = await fetchSheet('Registro');
+    if(!registroData.length){
+      container.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Sin registros todavía</div><div class="es-sub">Se completará cuando las escuelas generen PDFs.</div></div>';
+      return;
+    }
     renderRegistro(registroData.slice().reverse());
   } catch(e) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Sin registros todavía</div><div class="es-sub">Se completará automáticamente cuando las escuelas generen PDFs.</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div><div class="es-title">No se pudo cargar el Registro</div><div class="es-sub">Verificá que la hoja se llame exactamente <strong>"Registro"</strong> y que el Sheet esté publicado como CSV.<br><small style="color:#aaa">${e.message}</small></div></div>`;
   }
 }
 
 function regRowHTML(r){
+  // Soporta columnas con o sin tilde (el CSV puede variar)
   const fecha = r.fecha||r.date||'';
-  const esc   = r.escuela||r.school||'';
-  const loc   = r.localidad||'';
-  const ac    = r.accion||'PDF';
-  const mes   = r.mes||'';
-  const anio  = r.año||r.anio||'';
+  const esc   = r.escuela||r.school||r.nombre||'';
+  const loc   = r.localidad||r.distrito||'';
+  const ac    = r.accion||r.action||'PDF';
+  const mes   = r.mes||r.month||'';
+  const anio  = r.ano||r.anio||r.year||r['a\u00f1o']||''; // año con y sin tilde
   return `<div class="reg-row">
     <div class="reg-icon">${ac.toLowerCase().includes('anual')?'📅':'📄'}</div>
     <div class="reg-info">
       <div class="reg-esc">${esc||'(sin nombre)'}</div>
-      <div class="reg-sub">${loc?loc+' · ':''}<span style="color:var(--sky)">${mes} ${anio}</span>${ac?' · '+ac:''}</div>
+      <div class="reg-sub">${loc?loc+' · ':''}<span style="color:var(--sky)">${mes}${anio?' '+anio:''}</span>${ac?' · <em>'+ac+'</em>':''}</div>
     </div>
     <div class="reg-fecha">${fecha}</div>
   </div>`;
