@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a3a5c">
+<title>Panel Admin — Consejo Escolar La Matanza</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#5eb8e0;--sky2:#3a9ec8;--rose:#e8a0b8;
+  --grad:linear-gradient(135deg,#1a3a5c 0%,#2a6090 50%,#1a7a8a 100%);
+  --grad-soft:linear-gradient(135deg,#f0f4f8 0%,#e8f4fc 100%);
+  --white:#fff;--ink:#1a2a3a;--muted:#607080;--line:#d0e0ec;
+  --input-bg:#f0f7fc;--green:#2d8a5e;--red:#c0392b;
+  --green-lt:#e8f5ee;--red-lt:#fdecea;
+  --gold:#c8963e;--gold-lt:#fdf3e0;
+  --accent:#1a7a8a;--accent-lt:#e0f4f7;
+  --shadow:0 4px 20px rgba(26,58,92,.12);
+  --radius:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--grad-soft);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:999;background:var(--grad);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
+#login-screen.hide{display:none}
+.login-box{background:white;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.login-logo img{height:44px}
+.login-logo-text{font-size:1.5rem;font-weight:900;letter-spacing:-1px}
+.login-logo-text span:nth-child(1){color:#1a5fa8}
+.login-logo-text span:nth-child(2){color:#e8901a}
+.login-logo-text span:nth-child(3){color:#1ab0c8}
+.login-subtitle{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-left:2px}
+.login-title{font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:6px}
+.login-desc{font-size:.78rem;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.login-field label{display:block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:6px}
+.login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:'Nunito',sans-serif;font-size:1rem;background:var(--input-bg);color:var(--ink);margin-bottom:14px;transition:border-color .2s}
+.login-field input:focus{outline:none;border-color:var(--sky);background:white}
+.login-btn{width:100%;padding:13px;background:var(--grad);color:white;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,92,.3);transition:transform .15s}
+.login-btn:active{transform:scale(.97)}
+.login-error{font-size:.78rem;color:var(--red);background:var(--red-lt);padding:8px 12px;border-radius:8px;margin-top:8px;display:none}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--grad);padding:0 14px;box-shadow:0 2px 20px rgba(26,58,92,.3)}
+.topbar-inner{max-width:800px;margin:0 auto;display:flex;align-items:center;gap:10px;height:58px}
+.topbar-logo{background:white;border-radius:10px;padding:4px 10px;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.topbar-logo img{height:30px;display:block}
+.topbar-logo-fb{font-size:1rem;font-weight:900;letter-spacing:-0.5px}
+.topbar-logo-fb span:nth-child(1){color:#1a5fa8}
+.topbar-logo-fb span:nth-child(2){color:#e8901a}
+.topbar-logo-fb span:nth-child(3){color:#1ab0c8}
+.topbar-title{color:white;font-size:.88rem;font-weight:800;line-height:1.2;flex:1}
+.topbar-title span{display:block;font-size:.66rem;font-weight:400;opacity:.8}
+.logout-btn{background:rgba(255,255,255,.2);border:none;color:white;border-radius:9px;padding:7px 12px;font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer;transition:background .2s;white-space:nowrap}
+.logout-btn:active{background:rgba(255,255,255,.35)}
+
+/* TABS */
+.tabs{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);display:flex;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs-inner{max-width:800px;margin:0 auto;display:flex;width:100%}
+.tab{flex:1;min-width:80px;padding:9px 6px;border:none;background:transparent;color:rgba(255,255,255,.7);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab .ti{font-size:15px}
+.tab.active{color:white;border-bottom-color:white;background:rgba(255,255,255,.15)}
+
+/* MAIN */
+main{max-width:800px;margin:0 auto;padding:16px 12px 40px}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:white;border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.card-head{padding:14px 16px;background:var(--grad);color:white}
+.card-head h3{font-size:.95rem;font-weight:800}
+.card-head p{font-size:.72rem;opacity:.8;margin-top:2px}
+.card-body{padding:14px 16px}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:500px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat{background:white;border-radius:12px;padding:14px 12px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--sky)}
+.stat.green{border-top-color:var(--green)}
+.stat.gold{border-top-color:var(--gold)}
+.stat.red{border-top-color:var(--red)}
+.stat-val{font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1}
+.stat-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:5px}
+
+/* ESCUELA CARD */
+.escuela-card{background:white;border-radius:12px;margin-bottom:8px;box-shadow:0 2px 10px rgba(26,58,92,.08);border-left:4px solid var(--sky);overflow:hidden}
+.escuela-card.inactiva{border-left-color:#ddd;opacity:.65}
+.ec-head{padding:11px 14px 7px;display:flex;align-items:flex-start;gap:10px}
+.ec-icon{font-size:1.6rem;flex-shrink:0}
+.ec-info{flex:1;min-width:0}
+.ec-nombre{font-size:.88rem;font-weight:800;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ec-loc{font-size:.72rem;color:var(--muted);margin-top:2px}
+.ec-badge{font-size:.62rem;font-weight:800;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:var(--green-lt);color:var(--green);flex-shrink:0;white-space:nowrap}
+.ec-badge.inact{background:#f0f0f0;color:var(--muted)}
+.ec-footer{display:flex;gap:5px;padding:0 14px 10px;flex-wrap:wrap}
+.ec-tag{font-size:.65rem;background:var(--accent-lt);color:var(--accent);padding:3px 8px;border-radius:20px;font-weight:700}
+.ec-usos{font-size:.65rem;background:var(--green-lt);color:var(--green);padding:3px 8px;border-radius:20px;font-weight:800}
+
+/* REGISTRO */
+.reg-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #eef4f8}
+.reg-row:last-child{border-bottom:none}
+.reg-icon{font-size:1.2rem;flex-shrink:0}
+.reg-info{flex:1;min-width:0}
+.reg-esc{font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reg-sub{font-size:.68rem;color:var(--muted);margin-top:1px}
+.reg-fecha{font-size:.65rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
+
+/* SEARCH */
+.search-box{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.search-box input{flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;background:white;color:var(--ink)}
+.search-box input:focus{outline:none;border-color:var(--sky)}
+.refresh-btn{background:var(--grad);color:white;border:none;border-radius:10px;padding:10px 16px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0}
+
+/* FIELD */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;background:var(--input-bg);color:var(--ink);transition:border-color .2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--sky);background:white}
+.save-btn{width:100%;padding:12px;background:var(--grad);color:white;border:none;border-radius:11px;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(26,58,92,.25)}
+.save-btn:active{transform:scale(.98)}
+.info-box{background:var(--input-bg);border-radius:9px;padding:12px;font-size:.72rem;color:var(--muted);line-height:1.7;margin-top:10px}
+.info-box strong{color:var(--ink)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a2a3a;color:white;padding:10px 22px;border-radius:50px;font-size:.84rem;font-weight:700;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.empty-state{text-align:center;padding:32px 16px;color:var(--muted)}
+.empty-state .es-icon{font-size:3rem;margin-bottom:10px}
+.empty-state .es-title{font-size:.95rem;font-weight:800;color:var(--ink)}
+.empty-state .es-sub{font-size:.78rem;margin-top:6px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="logo.png" alt="MTZ" onerror="this.style.display='none';document.getElementById('logo-fb').style.display='flex'">
+      <div id="logo-fb" style="display:none">
+        <div class="login-logo-text"><span>M</span><span>T</span><span>Z</span></div>
+      </div>
+      <div class="login-subtitle">Consejo Escolar<br>La Matanza</div>
+    </div>
+    <div class="login-title">Panel de Administración</div>
+    <div class="login-desc">Acceso exclusivo para el Consejo Escolar. Ingresá la contraseña para continuar.</div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="pwd-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')intentarLogin()">
+    </div>
+    <button class="login-btn" onclick="intentarLogin()">Ingresar →</button>
+    <div class="login-error" id="login-error">Contraseña incorrecta. Intentá de nuevo.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-logo">
+      <img src="logo.png" alt="MTZ" onerror="this.style.display='none';document.getElementById('tb-logo-fb').style.display='flex'">
+      <div id="tb-logo-fb" style="display:none"><div class="topbar-logo-fb"><span>M</span><span>T</span><span>Z</span></div></div>
+    </div>
+    <div class="topbar-title">Panel Admin<span>Consejo Escolar La Matanza</span></div>
+    <button class="logout-btn" onclick="cerrarSesion()">🔒 Salir</button>
+  </div>
+  <div class="tabs"><div class="tabs-inner">
+    <button class="tab active" onclick="goTab('dashboard',this)"><span class="ti">📊</span>Dashboard</button>
+    <button class="tab" onclick="goTab('escuelas',this);cargarEscuelas()"><span class="ti">🏫</span>Escuelas</button>
+    <button class="tab" onclick="goTab('registro',this);cargarRegistro()"><span class="ti">📝</span>Registro</button>
+    <button class="tab" onclick="goTab('config',this);cargarConfig()"><span class="ti">⚙️</span>Configurar</button>
+  </div></div>
+</header>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="stat-grid" id="stats-grid">
+    <div class="stat"><div class="stat-val" id="st-escuelas">—</div><div class="stat-lbl">Escuelas</div></div>
+    <div class="stat green"><div class="stat-val" id="st-activas">—</div><div class="stat-lbl">Activas</div></div>
+    <div class="stat gold"><div class="stat-val" id="st-usos">—</div><div class="stat-lbl">PDFs generados</div></div>
+    <div class="stat red"><div class="stat-val" id="st-mes">—</div><div class="stat-lbl">Este mes</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>📝 Actividad reciente</h3><p>Últimas escuelas que generaron PDFs</p></div>
+    <div class="card-body" id="dash-actividad">
+      <div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>🏫 Escuelas más activas</h3><p>Top 5 por cantidad de usos</p></div>
+    <div class="card-body" id="dash-top5">
+      <div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ESCUELAS -->
+<div id="page-escuelas" class="page">
+  <div class="search-box">
+    <input type="text" id="buscar-escuela" placeholder="🔍  Nombre, número o localidad…" oninput="filtrarEscuelas()">
+    <button class="refresh-btn" onclick="cargarEscuelas()">↻ Actualizar</button>
+  </div>
+  <div id="escuelas-stats" style="margin-bottom:10px;font-size:.75rem;color:var(--muted)"></div>
+  <div id="escuelas-container">
+    <div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>
+  </div>
+</div>
+
+<!-- REGISTRO -->
+<div id="page-registro" class="page">
+  <div class="search-box">
+    <input type="text" id="buscar-registro" placeholder="🔍  Buscar por escuela o mes…" oninput="filtrarRegistro()">
+    <button class="refresh-btn" onclick="cargarRegistro()">↻ Actualizar</button>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>📋 Historial completo de actividad</h3><p>Cada vez que una escuela generó un PDF</p></div>
+    <div class="card-body" id="registro-container">
+      <div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIGURAR -->
+<div id="page-config" class="page">
+  <div class="card">
+    <div class="card-head"><h3>⚙️ Conexión con Google Sheets</h3><p>Configurá el Sheet donde se registran las escuelas</p></div>
+    <div class="card-body">
+      <div class="field">
+        <label>ID del Google Sheet</label>
+        <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      </div>
+      <div class="field">
+        <label>Nombre de la hoja de escuelas</label>
+        <input type="text" id="sheet-tab" placeholder="Escuelas">
+      </div>
+      <div class="field">
+        <label>URL del Apps Script (registro automático)</label>
+        <input type="text" id="apps-script-url" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      </div>
+      <div class="field">
+        <label>Cambiar contraseña del panel admin</label>
+        <input type="password" id="nueva-pwd" placeholder="Nueva contraseña (dejar vacío para no cambiar)">
+      </div>
+      <button class="save-btn" onclick="guardarConfig()">💾 Guardar configuración</button>
+      <div class="info-box">
+        <strong>Pasos para activar el registro automático:</strong><br>
+        1. Creá un Google Sheet (puede ser nuevo o existente)<br>
+        2. Abrí el Sheet → <strong>Extensiones → Apps Script</strong><br>
+        3. Pegá el código del archivo <strong>apps-script.gs</strong><br>
+        4. <strong>Implementar → Nueva implementación → Aplicación web</strong><br>
+        &nbsp;&nbsp;&nbsp;· Ejecutar como: <em>Yo</em><br>
+        &nbsp;&nbsp;&nbsp;· Quién accede: <em>Cualquier usuario</em><br>
+        5. Copiá la URL y pegala arriba<br>
+        6. Para ver la lista: Archivo → Compartir → <strong>Publicar en la web → CSV</strong><br>
+        7. Copiá el ID de la URL del Sheet y pegalo arriba
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" style="background:linear-gradient(135deg,#c0392b,#e74c3c)"><h3>🗑 Zona de peligro</h3><p>Estas acciones no se pueden deshacer</p></div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="if(confirm('¿Cerrar sesión?'))cerrarSesion()" style="padding:11px;background:#fee;color:var(--red);border:1.5px solid #f5b7b1;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer">🔒 Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<footer style="text-align:center;padding:18px 0 32px;pointer-events:none;user-select:none">
+  <span style="font-size:.62rem;color:#7090a8;letter-spacing:.12em;font-weight:600;text-transform:uppercase">Desarrollado por Maggie Sotelo · Consejo Escolar La Matanza</span>
+</footer>
+
+<script>
+// ── AUTH ──
+const DEFAULT_PWD = 'mtz2026'; // Contraseña por defecto — cambiarla desde config
+const STORAGE_KEY  = 'admin_mtz_auth';
+const PWD_KEY      = 'admin_mtz_pwd';
+
+function getPwd(){ return localStorage.getItem(PWD_KEY) || DEFAULT_PWD; }
+
+function intentarLogin(){
+  const input = document.getElementById('pwd-input').value;
+  const err = document.getElementById('login-error');
+  if(input === getPwd()){
+    localStorage.setItem(STORAGE_KEY, 'ok');
+    document.getElementById('login-screen').classList.add('hide');
+    err.style.display='none';
+    iniciarAdmin();
+  } else {
+    err.style.display='block';
+    document.getElementById('pwd-input').value='';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function cerrarSesion(){
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('login-screen').classList.remove('hide');
+  document.getElementById('pwd-input').value='';
+}
+
+// ── UTILS ──
+const toast = (msg,ms=2800) => {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),ms);
+};
+function goTab(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── CONFIG ──
+function cargarConfig(){
+  document.getElementById('sheet-id').value = localStorage.getItem('coope_sheet_id')||'';
+  document.getElementById('sheet-tab').value = localStorage.getItem('coope_sheet_tab')||'Escuelas';
+  document.getElementById('apps-script-url').value = localStorage.getItem('coope_script_url')||'';
+}
+
+function guardarConfig(){
+  const id  = document.getElementById('sheet-id').value.trim();
+  const tab = document.getElementById('sheet-tab').value.trim() || 'Escuelas';
+  const url = document.getElementById('apps-script-url').value.trim();
+  const pwd = document.getElementById('nueva-pwd').value.trim();
+  if(id)  localStorage.setItem('coope_sheet_id', id);
+  if(tab) localStorage.setItem('coope_sheet_tab', tab);
+  if(url) localStorage.setItem('coope_script_url', url);
+  if(pwd){ localStorage.setItem(PWD_KEY, pwd); document.getElementById('nueva-pwd').value=''; toast('🔑 Contraseña actualizada'); }
+  toast('✅ Configuración guardada');
+}
+
+// ── CSV PARSER ──
+function parsearCSV(text){
+  const lines = text.trim().split('\n');
+  if(lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim().toLowerCase());
+  return lines.slice(1).map(line=>{
+    const cols=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cols.push(cur.trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(cols[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+
+// ── DATA ──
+let escuelasData=[], registroData=[];
+
+async function fetchSheet(tab){
+  const id = localStorage.getItem('coope_sheet_id')||'';
+  if(!id) throw new Error('No hay Sheet configurado');
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  return parsearCSV(await resp.text());
+}
+
+// ── DASHBOARD ──
+async function cargarDashboard(){
+  try {
+    const sheetTab = localStorage.getItem('coope_sheet_tab')||'Escuelas';
+    const [escuelas, registro] = await Promise.allSettled([
+      fetchSheet(sheetTab),
+      fetchSheet('Registro')
+    ]);
+    escuelasData = escuelas.status==='fulfilled' ? escuelas.value : [];
+    registroData = registro.status==='fulfilled' ? registro.value : [];
+
+    // Stats
+    const activas = escuelasData.filter(e=>{
+      const a=(e.activo||e.estado||'si').toLowerCase();
+      return a==='si'||a==='sí'||a==='1'||a==='true'||a==='activo'||a==='activa';
+    }).length;
+    const totalUsos = registroData.length;
+    const mesActual = new Date().toLocaleString('es-AR',{month:'long'});
+    const estesMes = registroData.filter(r=>(r.mes||'').toLowerCase()===mesActual.toLowerCase()).length;
+
+    document.getElementById('st-escuelas').textContent = escuelasData.length || '—';
+    document.getElementById('st-activas').textContent  = activas || '—';
+    document.getElementById('st-usos').textContent     = totalUsos || '—';
+    document.getElementById('st-mes').textContent      = estesMes || '—';
+
+    // Actividad reciente
+    const recientes = registroData.slice(-8).reverse();
+    document.getElementById('dash-actividad').innerHTML = recientes.length
+      ? recientes.map(r=>regRowHTML(r)).join('')
+      : '<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Sin actividad todavía</div><div class="es-sub">Aparecerá aquí cuando las escuelas generen PDFs</div></div>';
+
+    // Top 5
+    const conteo={};
+    registroData.forEach(r=>{ const k=r.escuela||''; if(k) conteo[k]=(conteo[k]||0)+1; });
+    const top5 = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    document.getElementById('dash-top5').innerHTML = top5.length
+      ? top5.map(([nombre,usos],i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f8">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--grad);color:white;font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+            <div style="flex:1;font-size:.84rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
+            <div style="font-size:.72rem;font-weight:800;color:var(--green);background:var(--green-lt);padding:3px 9px;border-radius:20px">${usos} PDFs</div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📊</div><div class="es-title">Sin datos todavía</div></div>';
+
+  } catch(e) {
+    document.getElementById('dash-actividad').innerHTML = `<div class="empty-state"><div class="es-icon">⚙️</div><div class="es-title">Configurá el Google Sheet</div><div class="es-sub">Ir a la pestaña <strong>Configurar</strong> para conectar tu planilla.</div></div>`;
+    document.getElementById('dash-top5').innerHTML = '';
+  }
+}
+
+// ── ESCUELAS ──
+async function cargarEscuelas(){
+  const container = document.getElementById('escuelas-container');
+  container.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>';
+  try {
+    const tab = localStorage.getItem('coope_sheet_tab')||'Escuelas';
+    escuelasData = await fetchSheet(tab);
+    document.getElementById('escuelas-stats').textContent =
+      `${escuelasData.length} escuela${escuelasData.length!==1?'s':''} · actualizado ${new Date().toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
+    renderEscuelas(escuelasData);
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div><div class="es-title">No se pudo conectar</div><div class="es-sub">${e.message}<br>Verificá la configuración del Sheet.</div></div>`;
+  }
+}
+
+function renderEscuelas(data){
+  const c = document.getElementById('escuelas-container');
+  if(!data.length){
+    c.innerHTML='<div class="empty-state"><div class="es-icon">🔍</div><div class="es-title">Sin resultados</div></div>';
+    return;
+  }
+  c.innerHTML = data.map(e=>{
+    const nombre   = e.nombre||e.escuela||e['institución']||'Sin nombre';
+    const loc      = e.localidad||e.distrito||'';
+    const nivel    = e.nivel||e.tipo||'';
+    const tesorero = e.tesorero||e.tesorera||'';
+    const tel      = e.tel||e['teléfono']||e.telefono||'';
+    const usos     = e.usos||e['usos']||'';
+    const activo   = (e.activo||e.estado||'si').toLowerCase();
+    const isActivo = activo==='si'||activo==='sí'||activo==='1'||activo==='true'||activo==='activo'||activo==='activa';
+    const ultimoUso= e['último uso']||e['ultimo uso']||'';
+    const icon     = nivel.toLowerCase().includes('sec')?'🏫':nivel.toLowerCase().includes('ini')?'🎈':'🏫';
+    return `<div class="escuela-card${isActivo?'':' inactiva'}">
+      <div class="ec-head">
+        <div class="ec-icon">${icon}</div>
+        <div class="ec-info">
+          <div class="ec-nombre" title="${nombre}">${nombre}</div>
+          ${loc?`<div class="ec-loc">📍 ${loc}</div>`:''}
+        </div>
+        <div class="ec-badge${isActivo?'':' inact'}">${isActivo?'✓ Activa':'Inactiva'}</div>
+      </div>
+      <div class="ec-footer">
+        ${nivel?`<span class="ec-tag">🎓 ${nivel}</span>`:''}
+        ${tesorero?`<span class="ec-tag">👤 ${tesorero}</span>`:''}
+        ${tel?`<span class="ec-tag">📞 ${tel}</span>`:''}
+        ${usos?`<span class="ec-usos">📄 ${usos} PDFs</span>`:''}
+        ${ultimoUso?`<span class="ec-tag">🕐 ${ultimoUso}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filtrarEscuelas(){
+  const q=(document.getElementById('buscar-escuela').value||'').toLowerCase();
+  if(!q){renderEscuelas(escuelasData);return;}
+  renderEscuelas(escuelasData.filter(e=>Object.values(e).join(' ').toLowerCase().includes(q)));
+}
+
+// ── REGISTRO ──
+async function cargarRegistro(){
+  const container = document.getElementById('registro-container');
+  container.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>';
+  try {
+    registroData = await fetchSheet('Registro');
+    renderRegistro(registroData.slice().reverse());
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Sin registros todavía</div><div class="es-sub">Se completará automáticamente cuando las escuelas generen PDFs.</div></div>`;
+  }
+}
+
+function regRowHTML(r){
+  const fecha = r.fecha||r.date||'';
+  const esc   = r.escuela||r.school||'';
+  const loc   = r.localidad||'';
+  const ac    = r.accion||'PDF';
+  const mes   = r.mes||'';
+  const anio  = r.año||r.anio||'';
+  return `<div class="reg-row">
+    <div class="reg-icon">${ac.toLowerCase().includes('anual')?'📅':'📄'}</div>
+    <div class="reg-info">
+      <div class="reg-esc">${esc||'(sin nombre)'}</div>
+      <div class="reg-sub">${loc?loc+' · ':''}<span style="color:var(--sky)">${mes} ${anio}</span>${ac?' · '+ac:''}</div>
+    </div>
+    <div class="reg-fecha">${fecha}</div>
+  </div>`;
+}
+
+function renderRegistro(data){
+  const c = document.getElementById('registro-container');
+  if(!data.length){
+    c.innerHTML='<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Sin registros todavía</div></div>';
+    return;
+  }
+  c.innerHTML = data.map(r=>regRowHTML(r)).join('');
+}
+
+function filtrarRegistro(){
+  const q=(document.getElementById('buscar-registro').value||'').toLowerCase();
+  const data = registroData.slice().reverse();
+  if(!q){renderRegistro(data);return;}
+  renderRegistro(data.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q)));
+}
+
+// ── INIT ──
+function iniciarAdmin(){
+  cargarDashboard();
+}
+
+// Verificar si ya hay sesión activa
+if(localStorage.getItem(STORAGE_KEY)==='ok'){
+  document.getElementById('login-screen').classList.add('hide');
+  iniciarAdmin();
+}
+</script>
+</body>
+</html>
