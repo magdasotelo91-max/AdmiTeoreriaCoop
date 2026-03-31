@@ -437,15 +437,59 @@ async function cargarDashboard(){
 async function cargarEscuelas(){
   const container = document.getElementById('escuelas-container');
   container.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Cargando…</div></div>';
+
+  const tab = localStorage.getItem('coope_sheet_tab')||'Escuelas';
+
+  // Intentar cargar hoja Escuelas; si falla, construirla desde Registro
+  let intentoEscuelas = null;
   try {
-    const tab = localStorage.getItem('coope_sheet_tab')||'Escuelas';
-    escuelasData = await fetchSheet(tab);
-    document.getElementById('escuelas-stats').textContent =
-      `${escuelasData.length} escuela${escuelasData.length!==1?'s':''} · actualizado ${new Date().toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
-    renderEscuelas(escuelasData);
+    intentoEscuelas = await fetchSheet(tab);
   } catch(e) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div><div class="es-title">No se pudo conectar</div><div class="es-sub">${e.message}<br>Verificá la configuración del Sheet.</div></div>`;
+    intentoEscuelas = null;
   }
+
+  if(intentoEscuelas && intentoEscuelas.length > 0){
+    // Hoja Escuelas existe y tiene datos
+    escuelasData = intentoEscuelas;
+  } else {
+    // Hoja Escuelas no existe o está vacía → construir desde Registro
+    let regData = registroData;
+    if(!regData.length){
+      try { regData = await fetchSheet('Registro'); registroData = regData; } catch(e2){ regData = []; }
+    }
+    if(regData.length){
+      // Agrupar escuelas únicas desde el registro
+      const mapa = {};
+      regData.forEach(r=>{
+        const nombre = r.escuela||r.nombre||'';
+        if(!nombre) return;
+        if(!mapa[nombre]){
+          mapa[nombre] = { nombre, localidad: r.localidad||'', nivel:'', tesorero:'', tel:'', activo:'Si', usos:0, 'ultimo uso':'' };
+        }
+        mapa[nombre].usos++;
+        mapa[nombre]['ultimo uso'] = r.fecha||'';
+        if(r.localidad && !mapa[nombre].localidad) mapa[nombre].localidad = r.localidad;
+      });
+      escuelasData = Object.values(mapa);
+      document.getElementById('escuelas-stats').textContent =
+        `${escuelasData.length} escuela${escuelasData.length!==1?'s':''} (desde Registro) · ${new Date().toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
+      renderEscuelas(escuelasData);
+
+      // Aviso informativo
+      const aviso = document.createElement('div');
+      aviso.style.cssText = 'background:#fff3cd;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:.78rem;color:#7a4a00;line-height:1.6';
+      aviso.innerHTML = '<strong>⚠️ La hoja "Escuelas" no está publicada todavía.</strong><br>Los datos se muestran desde el Registro de actividad. Para ver información completa (nivel, tesorero, teléfono), publicá la hoja "Escuelas" como CSV en <em>Archivo → Compartir → Publicar en la web</em>.';
+      container.appendChild(aviso);
+      return;
+    } else {
+      container.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div><div class="es-title">Todavía no hay escuelas registradas</div><div class="es-sub">Aparecerán aquí automáticamente cuando las tesoreras generen su primer PDF.<br><br>Si ya publicaste el Sheet, verificá que la hoja se llame <strong>"${tab}"</strong> y esté publicada como CSV en <em>Archivo → Compartir → Publicar en la web</em>.</div></div>`;
+      return;
+    }
+  }
+
+  document.getElementById('escuelas-stats').textContent =
+    `${escuelasData.length} escuela${escuelasData.length!==1?'s':''} · actualizado ${new Date().toLocaleString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
+  renderEscuelas(escuelasData);
 }
 
 function renderEscuelas(data){
